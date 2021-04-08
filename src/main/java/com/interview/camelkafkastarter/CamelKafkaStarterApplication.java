@@ -30,7 +30,14 @@ public class CamelKafkaStarterApplication {
 
     @KafkaListener(id = "myId", topics = "first-topic")
     public void listen(String in) {
-        System.out.println(in);
+        System.out.println("in: " + in);
     }
-    
+
+    @Bean
+    public ApplicationRunner runner(KafkaTemplate<String, String> template) {
+        return args -> {
+            template.send("first-topic", "test");
+        };
+    }
+
 }
