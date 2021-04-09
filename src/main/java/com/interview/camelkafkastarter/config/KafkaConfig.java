@@ -1,5 +1,6 @@
 package com.interview.camelkafkastarter.config;
 
+import com.interview.camelkafkastarter.service.Consumer;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +29,10 @@ public class KafkaConfig {
     @Bean
     public ApplicationRunner runner(KafkaTemplate<String, String> template) {
         return args -> {
-            template.send("first-topic", "test");
+            for (int i = 0; i < 100; i++) {
+                template.send("first-topic", String.valueOf(i));
+                Thread.sleep(500);
+            }
         };
     }
 
