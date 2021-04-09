@@ -20,10 +20,10 @@ public class KafkaConfig {
                 .build();
     }
 
-    @KafkaListener(id = "myId2", topics = "first-topic")
-    public void listen(String in) {
-        System.out.println("in: " + in);
-    }
+//    @KafkaListener(id = "myId2", topics = "first-topic")
+//    public void listen(String in) {
+//        System.out.println("in: " + in);
+//    }
 
     @Bean
     public ApplicationRunner runner(KafkaTemplate<String, String> template) {
