@@ -22,6 +22,7 @@ public class Producer {
     @Scheduled(fixedRate = 10000)
     public void sendMessage(){
         String message = String.valueOf(createRandomNumber());
+        System.out.println("producing : " + message);
         this.kafkaTemplate.send(TOPIC, message);
     }
 
