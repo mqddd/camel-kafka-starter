@@ -1,16 +1,23 @@
 package com.interview.camelkafkastarter.config;
 
-import com.interview.camelkafkastarter.service.Consumer;
+import com.interview.camelkafkastarter.service.Producer;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
-import org.springframework.kafka.core.KafkaTemplate;
 
 @Configuration
 public class KafkaConfig {
+
+    final
+    Producer producer;
+
+    @Autowired
+    public KafkaConfig(Producer producer) {
+        this.producer = producer;
+    }
 
     @Bean
     public NewTopic topic() {
@@ -21,17 +28,12 @@ public class KafkaConfig {
                 .build();
     }
 
-//    @KafkaListener(id = "myId2", topics = "first-topic")
-//    public void listen(String in) {
-//        System.out.println("in: " + in);
-//    }
-
     @Bean
-    public ApplicationRunner runner(KafkaTemplate<String, String> template) {
+    public ApplicationRunner runner() {
         return args -> {
-            for (int i = 0; i < 100; i++) {
-                template.send("first-topic", String.valueOf(i));
-                Thread.sleep(500);
+            while (true) {
+                this.producer.sendMessage();
+                Thread.sleep(10000);
             }
         };
     }

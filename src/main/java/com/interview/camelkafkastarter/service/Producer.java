@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Random;
+
 @Service
 public class Producer {
 
@@ -16,8 +18,12 @@ public class Producer {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void sendMessage(String message){
-        System.out.println("Producing message : " + message);
+    public void sendMessage(){
+        String message = String.valueOf(createRandomNumber());
         this.kafkaTemplate.send(TOPIC, message);
+    }
+
+    private int createRandomNumber(){
+        return new Random().nextInt(100);
     }
 }
