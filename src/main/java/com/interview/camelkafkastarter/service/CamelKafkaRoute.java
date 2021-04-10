@@ -1,5 +1,7 @@
 package com.interview.camelkafkastarter.service;
 
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
 
@@ -7,11 +9,23 @@ import org.springframework.stereotype.Component;
 @Component
 public class CamelKafkaRoute extends RouteBuilder {
 
+    private final String KAFKA_URI = "kafka:first-topic?brokers=localhost:9092&groupId=myId&autoOffsetReset=earliest";
+
     @Override
     public void configure() throws Exception {
-        final StringBuilder s = new StringBuilder("2");
-        from("kafka:first-topic?brokers=localhost:9092&groupId=myId&autoOffsetReset=earliest")
-                .process(exchange -> System.out.println("hi : " + s.append(exchange.getIn().getBody().toString())))
-                .log(s.toString());
+        
+        from(this.KAFKA_URI)
+                .aggregate(new MessageStrategy())
+                .constant(true)
+                .completionInterval(60000)
+                .to("direct:somewhere");
+
+        from("direct:somewhere")
+                .process(new Processor() {
+                    @Override
+                    public void process(Exchange exchange) throws Exception {
+                        System.out.println(exchange.getIn().getBody(Integer.class));
+                    }
+                });
     }
 }
