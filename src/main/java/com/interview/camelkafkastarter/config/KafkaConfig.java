@@ -31,10 +31,7 @@ public class KafkaConfig {
     @Bean
     public ApplicationRunner runner() {
         return args -> {
-            while (true) {
-                this.producer.sendMessage();
-                Thread.sleep(10000);
-            }
+            this.producer.sendMessage();
         };
     }
 
