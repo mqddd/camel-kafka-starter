@@ -27,7 +27,7 @@ public class CamelKafkaRoute extends RouteBuilder {
                 .process(new Processor() {
                     @Override
                     public void process(Exchange exchange) throws Exception {
-                        System.out.println(exchange.getIn().getBody(Integer.class));
+                        System.out.println("consuming sum : " + exchange.getIn().getBody(Integer.class));
                     }
                 })
                 .to("mock:result");
