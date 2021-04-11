@@ -12,10 +12,12 @@ public class CamelKafkaRoute extends RouteBuilder {
 
     private final String KAFKA_URI = "kafka:first-topic?brokers=localhost:9092&groupId=myId&autoOffsetReset=earliest";
 
+    public static final String KAFKA_ROUTE_ID = "kafka-route";
+
     @Override
     public void configure() throws Exception {
 
-        from(this.KAFKA_URI)
+        from(this.KAFKA_URI).routeId(KAFKA_ROUTE_ID)
                 .aggregate(new MessageStrategy())
                 .constant(true)
                 .completionInterval(60000)
@@ -27,6 +29,7 @@ public class CamelKafkaRoute extends RouteBuilder {
                     public void process(Exchange exchange) throws Exception {
                         System.out.println(exchange.getIn().getBody(Integer.class));
                     }
-                });
+                })
+                .to("mock:result");
     }
 }
