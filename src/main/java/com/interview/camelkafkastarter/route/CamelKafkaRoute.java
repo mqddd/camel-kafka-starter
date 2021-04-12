@@ -17,6 +17,7 @@ public class CamelKafkaRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
+        // consumer routes
         from(this.KAFKA_URI).routeId(KAFKA_ROUTE_ID)
                 .aggregate(new MessageStrategy())
                 .constant(true)
@@ -31,5 +32,9 @@ public class CamelKafkaRoute extends RouteBuilder {
                     }
                 })
                 .to("mock:result");
+
+        // producer route
+        from("direct:kafka-producer")
+                .to(this.KAFKA_URI);
     }
 }
