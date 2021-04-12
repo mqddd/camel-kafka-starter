@@ -1,6 +1,6 @@
 package com.interview.camelkafkastarter.route;
 
-import com.interview.camelkafkastarter.model.MessageStrategy;
+import com.interview.camelkafkastarter.logic.MessageStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;

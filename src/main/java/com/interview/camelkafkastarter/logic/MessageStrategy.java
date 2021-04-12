@@ -1,4 +1,4 @@
-package com.interview.camelkafkastarter.model;
+package com.interview.camelkafkastarter.logic;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
