@@ -11,8 +11,7 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaConfig {
 
-    final
-    Producer producer;
+    private final Producer producer;
 
     @Autowired
     public KafkaConfig(Producer producer) {
