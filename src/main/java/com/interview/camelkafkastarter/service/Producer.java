@@ -2,7 +2,6 @@ package com.interview.camelkafkastarter.service;
 
 import org.apache.camel.ProducerTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -10,7 +9,7 @@ import java.util.Random;
 @Service
 public class Producer {
 
-    private static final String TOPIC = "first-topic";
+    private final String KAFKA_URI = "kafka:first-topic?brokers=localhost:9092&groupId=myId&autoOffsetReset=earliest";
 
     private ProducerTemplate producerTemplate;
 
@@ -19,11 +18,10 @@ public class Producer {
         this.producerTemplate = producerTemplate;
     }
 
-    @Scheduled(fixedRate = 10000)
     public void sendMessage(){
         String message = String.valueOf(createRandomNumber());
         System.out.println("producing : " + message);
-        producerTemplate.sendBody("direct:kafka-producer", message);
+        producerTemplate.sendBody(this.KAFKA_URI, message);
     }
 
     private int createRandomNumber(){
