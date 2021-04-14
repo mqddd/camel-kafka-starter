@@ -1,8 +1,6 @@
 package com.interview.camelkafkastarter.route;
 
 import com.interview.camelkafkastarter.logic.MessageStrategy;
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
 
@@ -21,14 +19,7 @@ public class CamelKafkaRoute extends RouteBuilder {
 
         // producer route
         from("scheduler:pro?delay=10000")
-                .process(new Processor() {
-                    @Override
-                    public void process(Exchange exchange) throws Exception {
-                        String message = String.valueOf(createRandomNumber());
-                        System.out.println("producing : " + message);
-                        exchange.getIn().setBody(message);
-                    }
-                })
+                .process(exchange -> exchange.getIn().setBody(createRandomNumber()))
                 .to(KAFKA_URI);
 
         // consumer routes
@@ -36,12 +27,7 @@ public class CamelKafkaRoute extends RouteBuilder {
                 .aggregate(new MessageStrategy())
                 .constant(true)
                 .completionInterval(60000)
-                .process(new Processor() {
-                    @Override
-                    public void process(Exchange exchange) throws Exception {
-                        System.out.println("consuming : " + exchange.getIn().getBody(Integer.class));
-                    }
-                });
+                .process(exchange -> System.out.println("consuming : " + exchange.getIn().getBody(Integer.class)));
     }
 
     private int createRandomNumber(){
