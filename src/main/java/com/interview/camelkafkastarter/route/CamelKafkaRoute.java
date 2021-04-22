@@ -14,10 +14,6 @@ public class CamelKafkaRoute extends RouteBuilder {
 
     public static final String KAFKA_ROUTE_ID = "kafka-route";
 
-    public String getKAFKA_URI() {
-        return KAFKA_URI;
-    }
-
     @Override
     public void configure() throws Exception {
 
@@ -30,12 +26,11 @@ public class CamelKafkaRoute extends RouteBuilder {
         from(this.KAFKA_URI).routeId(KAFKA_ROUTE_ID)
                 .aggregate(new MessageStrategy())
                 .constant(true)
-                .completionInterval(60000)
-                .process(exchange -> System.out.println("consuming : " + exchange.getIn().getBody(Integer.class)))
-                .to("mock:final");
+                .completionInterval(10000)
+                .process(exchange -> System.out.println("consuming : " + exchange.getIn().getBody(Integer.class)));
     }
 
-    private int createRandomNumber(){
+    private int createRandomNumber() {
         return new Random().nextInt(100);
     }
 }
