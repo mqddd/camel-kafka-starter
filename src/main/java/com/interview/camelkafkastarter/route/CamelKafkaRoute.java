@@ -26,7 +26,7 @@ public class CamelKafkaRoute extends RouteBuilder {
         from(this.KAFKA_URI).routeId(KAFKA_ROUTE_ID)
                 .aggregate(new MessageStrategy())
                 .constant(true)
-                .completionInterval(10000)
+                .completionInterval(60000)
                 .process(exchange -> System.out.println("consuming : " + exchange.getIn().getBody(Integer.class)));
     }
 
