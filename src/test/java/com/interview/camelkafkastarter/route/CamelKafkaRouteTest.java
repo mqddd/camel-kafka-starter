@@ -18,7 +18,8 @@ class CamelKafkaRouteTest extends CamelTestSupport {
         RouteBuilder consumerRouteBuilder = new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:fake-kafka")
+                from("direct:fake-kafka").routeId("consumer-route")
+                        .autoStartup(false)
                         .aggregate(new MessageStrategy())
                         .constant(true)
                         .completionInterval(60000)
@@ -29,7 +30,8 @@ class CamelKafkaRouteTest extends CamelTestSupport {
         RouteBuilder producerRoutBuilder = new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("scheduler:pro?delay=10000")
+                from("scheduler:pro?delay=10000").routeId("producer-route")
+                        .autoStartup(false)
                         .process(exchange -> exchange.getIn().setBody(createRandomNumber()))
                         .to("mock:producer-end");
             }
@@ -44,15 +46,9 @@ class CamelKafkaRouteTest extends CamelTestSupport {
     }
 
     @Test
-    public void producerTest() throws Exception {
-        MockEndpoint result = getMockEndpoint("mock:producer-end");
-        result.expectedMessageCount(6);
-        MockEndpoint.assertIsSatisfied(60, TimeUnit.SECONDS, result);
-    }
-
-    @Test
     public void consumerTest() throws Exception {
         MockEndpoint result = getMockEndpoint("mock:consumer-end");
+        context.getRouteController().startRoute("consumer-route");
         result.expectedMessageCount(1);
         result.expectedBodiesReceived(21);
         template.sendBody("direct:fake-kafka", 1);
@@ -61,7 +57,17 @@ class CamelKafkaRouteTest extends CamelTestSupport {
         template.sendBody("direct:fake-kafka", 4);
         template.sendBody("direct:fake-kafka", 3);
         template.sendBody("direct:fake-kafka", 2);
-        MockEndpoint.assertIsSatisfied(60, TimeUnit.SECONDS, result);
+        MockEndpoint.assertIsSatisfied(20, TimeUnit.SECONDS, result);
+        context.getRouteController().stopRoute("consumer-route");
+    }
+
+    @Test
+    public void producerTest() throws Exception {
+        MockEndpoint result = getMockEndpoint("mock:producer-end");
+        context.getRouteController().startRoute("producer-route");
+        result.expectedMessageCount(5);
+        MockEndpoint.assertIsSatisfied(20, TimeUnit.SECONDS, result);
+        context.getRouteController().stopRoute("producer-route");
     }
 
 }
