@@ -1,66 +1,54 @@
 package com.interview.camelkafkastarter.route;
 
-import com.interview.camelkafkastarter.CamelKafkaStarterApplication;
-import org.apache.camel.CamelContext;
-import org.apache.camel.EndpointInject;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.AdviceWith;
+import com.interview.camelkafkastarter.logic.MessageStrategy;
+import org.apache.camel.RoutesBuilder;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.junit5.CamelSpringBootTest;
-import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.concurrent.TimeUnit;
 
 
-@ContextConfiguration
-@CamelSpringBootTest
-@SpringBootTest(classes = CamelKafkaStarterApplication.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class CamelKafkaRouteTest extends CamelSpringTestSupport {
-
-    @Autowired
-    private CamelContext context;
-
-    @Autowired
-    private ProducerTemplate template;
-
-    @EndpointInject(value = "mock:final")
-    private MockEndpoint result;
-
-    @Test
-    public void test() throws Exception {
-
-        AdviceWith.adviceWith(context, "kafka-route", a -> {
-            a.replaceFromWith("mock:fake-kafka");
-        });
-
-        result.expectedMessageCount(1);
-        result.expectedBodiesReceived(6);
-
-        template.sendBody("mock:fake-kafka", 1);
-//        Thread.sleep(10000);
-        template.sendBody("mock:fake-kafka", 6);
-//        Thread.sleep(10000);
-        template.sendBody("mock:fake-kafka", 5);
-//        Thread.sleep(10000);
-        template.sendBody("mock:fake-kafka", 4);
-//        Thread.sleep(10000);
-        template.sendBody("mock:fake-kafka", 3);
-//        Thread.sleep(10000);
-        template.sendBody("mock:fake-kafka", 2);
-//        Thread.sleep(10000);
-
-        MockEndpoint.assertIsSatisfied(result);
-    }
+class CamelKafkaRouteTest extends CamelTestSupport {
 
     @Override
-    protected AbstractApplicationContext createApplicationContext() {
-        return null;
+    protected RoutesBuilder createRouteBuilder() throws Exception {
+        return new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("direct:fake-kafka")
+                        .aggregate(new MessageStrategy())
+                        .constant(true)
+                        .completionInterval(60000)
+                        .process(exchange -> System.out.println("consuming : " + exchange.getIn().getBody(Integer.class)))
+                        .to("mock:result");
+            }
+        };
     }
+
+    @Test
+    public void producerTest(){
+
+
+    }
+
+    @Test
+    public void consumerTest() throws Exception {
+
+        MockEndpoint result = getMockEndpoint("mock:result");
+
+        result.expectedMessageCount(1);
+        result.expectedBodiesReceived(21);
+
+        template.sendBody("direct:fake-kafka", 1);
+        template.sendBody("direct:fake-kafka", 6);
+        template.sendBody("direct:fake-kafka", 5);
+        template.sendBody("direct:fake-kafka", 4);
+        template.sendBody("direct:fake-kafka", 3);
+        template.sendBody("direct:fake-kafka", 2);
+
+        MockEndpoint.assertIsSatisfied(60, TimeUnit.SECONDS, result);
+    }
+
 }
