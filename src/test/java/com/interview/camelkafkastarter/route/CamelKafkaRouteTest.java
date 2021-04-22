@@ -7,14 +7,15 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
 class CamelKafkaRouteTest extends CamelTestSupport {
 
     @Override
-    protected RoutesBuilder createRouteBuilder() throws Exception {
-        return new RouteBuilder() {
+    protected RoutesBuilder[] createRouteBuilders() throws Exception {
+        RouteBuilder consumerRouteBuilder = new RouteBuilder() {
             @Override
             public void configure() throws Exception {
                 from("direct:fake-kafka")
@@ -25,29 +26,41 @@ class CamelKafkaRouteTest extends CamelTestSupport {
                         .to("mock:result");
             }
         };
+        RouteBuilder producerRoutBuilder = new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("scheduler:pro?delay=10000")
+                        .process(exchange -> exchange.getIn().setBody(createRandomNumber()))
+                        .to("mock:end-kafka");
+            }
+        };
+        return new RoutesBuilder[]{
+                consumerRouteBuilder, producerRoutBuilder
+        };
+    }
+
+    private int createRandomNumber() {
+        return new Random().nextInt(100);
     }
 
     @Test
-    public void producerTest(){
-
-
+    public void producerTest() throws InterruptedException {
+        MockEndpoint result = getMockEndpoint("mock:end-kafka");
+        result.expectedMessageCount(6);
+        MockEndpoint.assertIsSatisfied(60, TimeUnit.SECONDS, result);
     }
 
     @Test
     public void consumerTest() throws Exception {
-
         MockEndpoint result = getMockEndpoint("mock:result");
-
         result.expectedMessageCount(1);
         result.expectedBodiesReceived(21);
-
         template.sendBody("direct:fake-kafka", 1);
         template.sendBody("direct:fake-kafka", 6);
         template.sendBody("direct:fake-kafka", 5);
         template.sendBody("direct:fake-kafka", 4);
         template.sendBody("direct:fake-kafka", 3);
         template.sendBody("direct:fake-kafka", 2);
-
         MockEndpoint.assertIsSatisfied(60, TimeUnit.SECONDS, result);
     }
 
