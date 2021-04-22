@@ -23,7 +23,7 @@ class CamelKafkaRouteTest extends CamelTestSupport {
                         .constant(true)
                         .completionInterval(60000)
                         .process(exchange -> System.out.println("consuming : " + exchange.getIn().getBody(Integer.class)))
-                        .to("mock:result");
+                        .to("mock:consumer-end");
             }
         };
         RouteBuilder producerRoutBuilder = new RouteBuilder() {
@@ -31,7 +31,7 @@ class CamelKafkaRouteTest extends CamelTestSupport {
             public void configure() throws Exception {
                 from("scheduler:pro?delay=10000")
                         .process(exchange -> exchange.getIn().setBody(createRandomNumber()))
-                        .to("mock:end-kafka");
+                        .to("mock:producer-end");
             }
         };
         return new RoutesBuilder[]{
@@ -44,15 +44,15 @@ class CamelKafkaRouteTest extends CamelTestSupport {
     }
 
     @Test
-    public void producerTest() throws InterruptedException {
-        MockEndpoint result = getMockEndpoint("mock:end-kafka");
+    public void producerTest() throws Exception {
+        MockEndpoint result = getMockEndpoint("mock:producer-end");
         result.expectedMessageCount(6);
         MockEndpoint.assertIsSatisfied(60, TimeUnit.SECONDS, result);
     }
 
     @Test
     public void consumerTest() throws Exception {
-        MockEndpoint result = getMockEndpoint("mock:result");
+        MockEndpoint result = getMockEndpoint("mock:consumer-end");
         result.expectedMessageCount(1);
         result.expectedBodiesReceived(21);
         template.sendBody("direct:fake-kafka", 1);
