@@ -5,6 +5,7 @@ import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.model.ProcessDefinition;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,13 @@ class CamelKafkaRouteTest extends CamelTestSupport {
         return true;
     }
 
+    @BeforeEach
+    public void setMockForKafka() throws Exception {
+        AdviceWith.adviceWith(context, CamelKafkaRoute.PRODUCER_ROUTE, a -> {
+            a.weaveById("producer-to-kafka").replace().to("mock:producer-end");
+        });
+    }
+
     @Test
     @Order(1)
     public void consumerTest() throws Exception {
@@ -36,10 +44,6 @@ class CamelKafkaRouteTest extends CamelTestSupport {
         AdviceWith.adviceWith(context, CamelKafkaRoute.CONSUMER_ROUTE, a -> {
            a.replaceFromWith("direct:fake-kafka");
            a.weaveByType(ProcessDefinition.class).after().to("mock:result");
-        });
-
-        AdviceWith.adviceWith(context, CamelKafkaRoute.PRODUCER_ROUTE, a -> {
-           a.weaveById("producer-to-kafka").replace().to("mock:producer-end");
         });
 
         context.getRouteDefinition("producer-route").autoStartup(false);
@@ -67,15 +71,15 @@ class CamelKafkaRouteTest extends CamelTestSupport {
     @Order(2)
     public void producerTest() throws Exception {
 
-        context.getRouteController().startRoute("producer-route");
+        context.getRouteDefinition("consumer-route").autoStartup(false);
+
+        context.start();
 
         MockEndpoint result = getMockEndpoint("mock:producer-end");
 
-        result.expectedMessageCount(5);
+        result.expectedMessageCount(3);
 
-        MockEndpoint.assertIsSatisfied(50, TimeUnit.SECONDS, result);
-
-        context.stop();
+        MockEndpoint.assertIsSatisfied(23, TimeUnit.SECONDS, result);
     }
 
 }
