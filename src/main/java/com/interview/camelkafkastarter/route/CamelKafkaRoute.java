@@ -21,7 +21,7 @@ public class CamelKafkaRoute extends RouteBuilder {
         // producer route
         from("scheduler:pro?delay=10000").routeId(PRODUCER_ROUTE)
                 .process(exchange -> exchange.getIn().setBody(createRandomNumber()))
-                    .to(KAFKA_URI).id("producer-to-kafka");
+                .to(KAFKA_URI).id("producer-to-kafka");
 
         // consumer routes
         from(this.KAFKA_URI).routeId(CONSUMER_ROUTE)
